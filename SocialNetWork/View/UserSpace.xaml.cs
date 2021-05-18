@@ -5,6 +5,7 @@ using SocialNetWork.Repository;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+
 namespace SocialNetWork.View
 {
     /// <summary>
@@ -30,6 +32,7 @@ namespace SocialNetWork.View
         private Images _images;
         private BitmapImage _bitImage;
         private IRepository _repository;
+
         public UserSpace(Users users)
         {
             InitializeComponent();
@@ -48,7 +51,7 @@ namespace SocialNetWork.View
                 + "Mail: " + _currentUser.Email;
             if (_currentUser.Avatar_id == null)
             {
-                _bitImage = new BitmapImage(new Uri(@"C:\Users\johan\source\repos\SocialNetWork\SocialNetWork\img\default.png"));
+                _bitImage = new BitmapImage(new Uri(@"C: \Users\johan\source\repos\SocialNetWork\SocialNetWork\images\default.png"));
                 avatar.ImageSource = _bitImage;
             }
             else
@@ -126,6 +129,7 @@ namespace SocialNetWork.View
         {
             var openFileDialog = new OpenFileDialog();
             var bitImage = new BitmapImage();
+            byte[] byteImage;
             openFileDialog.Filter = "JPG|*.jpg";
             if (openFileDialog.ShowDialog() == true)
             {
@@ -137,16 +141,11 @@ namespace SocialNetWork.View
                 JpegBitmapEncoder bitmapEncoder = new JpegBitmapEncoder();
                 bitmapEncoder.Frames.Add(BitmapFrame.Create(bitImage));
                 bitmapEncoder.Save(ms);
-                _currentUser.Images = new Model.Images()
-                {
-                    Date_added = DateTime.Now,
-                    Image = ms.ToArray()
-                };
-                _currentUser.Images1.Add(_currentUser.Images);
-                listOfImages.ItemsSource = GetListOfUserImage(await _repository.GetAllUserImages(_currentUser));
+                byteImage = ms.ToArray();
             }
 
-
+            _currentUser = await _repository.AddImage(byteImage,_currentUser);
+            listOfImages.ItemsSource = GetListOfUserImage(await _repository.GetAllUserImages(_currentUser));
         }
 
         //Chose new avatar
@@ -166,7 +165,7 @@ namespace SocialNetWork.View
                 JpegBitmapEncoder bitmapEncoder = new JpegBitmapEncoder();
                 bitmapEncoder.Frames.Add(BitmapFrame.Create(_bitImage));
                 bitmapEncoder.Save(ms);
-                _currentUser.Images = new Model.Images()
+                _currentUser.Images = new Images()
                 {
                     Date_added = DateTime.Now,
                     Image = ms.ToArray()
@@ -176,6 +175,8 @@ namespace SocialNetWork.View
 
             _currentUser = await _repository.ChangeAvatar(_currentUser);
             listOfImages.ItemsSource = GetListOfUserImage(await _repository.GetAllUserImages(_currentUser));
+
+
         }
 
         //Send message
@@ -194,6 +195,26 @@ namespace SocialNetWork.View
             this.Hide();
             window.Show();
             this.Close();
+        }
+
+        private async void MenuItem_Click_2(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Вы уверены, что хотите закрыть счёт?", "Уведомление", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                await _repository.RemoveUser(_currentUser);
+                mainName.Content = "Deleted";
+                mainInfo.Text = "This User deleted\nYou can close this page";
+                _bitImage = new BitmapImage(new Uri(@"C:\Users\johan\source\repos\SocialNetWork\SocialNetWork\images\default.png", UriKind.RelativeOrAbsolute));
+                avatar.ImageSource = _bitImage;
+                listOfImages.ItemsSource = null;
+                listOfMessages.ItemsSource = null;
+            }
+            else
+            {
+                return;
+            }
+           
         }
     }
 }

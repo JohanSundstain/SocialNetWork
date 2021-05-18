@@ -12,7 +12,6 @@ namespace SocialNetWork.Repository
     {
         private Entities _dbContext;
         
-
         public RepositoryIm(Entities dbContext)
         {
             this._dbContext = dbContext;
@@ -23,8 +22,6 @@ namespace SocialNetWork.Repository
             return _dbContext.Images.AsQueryable();
         }
 
-
-
         public async Task<Users> AddUser(Users user)
         {
             _dbContext.Users.Add(user);
@@ -34,12 +31,11 @@ namespace SocialNetWork.Repository
 
         public async Task<Users> ChangeAvatar(Users user)
         {
-            Users _user = _dbContext.Users.Where(c => c.Id == user.Id).FirstOrDefault();
+            Users _user = _dbContext.Users.Where(c => c.Id == user.Id).FirstOrDefault(); 
             _user.Images = user.Images;
             _user.Images1.Add(_user.Images);
             await _dbContext.SaveChangesAsync();
             return _user;
-
         }
 
         public async Task<Users> ChangeUser(Users user)
@@ -56,10 +52,7 @@ namespace SocialNetWork.Repository
 
         public async Task<Images> GetUserAvatarById(long? id)
         {
-            return await Task.Run(() =>
-            {
-                return _dbContext.Images.SingleOrDefault(c => c.Id == id);
-            });
+            return await _dbContext.Images.SingleOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<Users> GetUsersById(long id)
@@ -77,9 +70,10 @@ namespace SocialNetWork.Repository
 
         public async Task<List<Images>> GetAllUserImages(Users user)
         {
-            return await Task.Run(() => {
+            return await Task.Run(()=>
+            {
                 return user.Images1.ToList();
-            });
+            }); 
         }
 
         public async Task<List<Message>> GetMessages()
@@ -95,6 +89,34 @@ namespace SocialNetWork.Repository
                 Content = content
             };
             _dbContext.Messages.Add(message);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<Users> AddImage(byte[] image,Users user)
+        {
+            Images _image = new Images
+            {
+                Date_added = DateTime.Now,
+                Image = image
+            };
+            _dbContext.Images.Add(_image);
+            Users _users = _dbContext.Users.SingleOrDefault(c => c.Id == user.Id);
+            _users.Images1.Add(_image);
+            _dbContext.SaveChanges();
+            return _users;
+
+        }
+
+        public async Task RemoveUser(Users user)
+        {
+            Users _user = _dbContext.Users.SingleOrDefault(c=>c.Id == user.Id);
+            
+            _dbContext.Messages.RemoveRange(_dbContext.Messages.Where(c=>c.IdUser==_user.Id));
+
+            _dbContext.Images.RemoveRange(_user.Images1);
+
+            _dbContext.Users.Remove(_user);
+
             await _dbContext.SaveChangesAsync();
         }
     }

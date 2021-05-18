@@ -26,5 +26,9 @@ namespace SocialNetWork.Repository
         Task SendMessage(long user_id, string content);
 
         Task <List<Images>> GetAllUserImages(Users user);
+
+        Task<Users> AddImage(byte[] image, Users user);
+
+        Task RemoveUser(Users user);
     }
 }
