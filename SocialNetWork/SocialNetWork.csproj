@@ -72,7 +72,6 @@
     <Compile Include="Model\sysdiagram.cs">
       <DependentUpon>SocialNetWork.tt</DependentUpon>
     </Compile>
-    <Compile Include="Repository\BitmapEx.cs" />
     <Compile Include="View\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
